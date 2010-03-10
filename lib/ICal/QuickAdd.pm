@@ -5,7 +5,13 @@ use warnings;
 use Fcntl qw(SEEK_END O_RDONLY);
 use Carp;
 use vars '$VERSION';
-$VERSION = '0.5_1';
+$VERSION = '1.00';
+
+=head1 DESCRIPTION
+
+This is the guts of ICal::QuickAdd, of interest to developers.  Most users
+probably want the docs of L<iqa> instead, which is a script which uses this
+module.
 
 =head2 new()
 
@@ -18,7 +24,7 @@ $VERSION = '0.5_1';
 
 sub new {
     my $class = shift;
-    my $str = shift; 
+    my $str = shift;
 
     my $self  = {};
     unless ($str) {
@@ -28,7 +34,7 @@ sub new {
                 #   log =>'~/mail_audit_log',
                 #  loglevel => 3,
                             );
-        # Look on the first line of the message. 
+        # Look on the first line of the message.
         $str = $m->body->[0];
         $self->{from_email} = $m->from;
         $self->{from_email_obj} = $m;
@@ -46,23 +52,23 @@ sub new {
 =begin private
 
 =head2 _is_ical_file
-    
+
     my ($is_ical,$line_ending) = _is_ical_file($filename);
 
 Returns whether or not we think this file is a iCalendar file by checking
 that it ends with "END:VCALENDAR" as the standard mandates. We also return
 the last line break of the file to see whether it is "\n" which Evolution
-and Korganizer use (among others), or if it "\r\n" (CRLF), which is what 
-the iCalendar standard prescribes. 
+and Korganizer use (among others), or if it "\r\n" (CRLF), which is what
+the iCalendar standard prescribes.
 
 =end private
 
-=cut 
+=cut
 
 sub _is_ical_file {
     my $filename = shift;
     my $handle;
-    sysopen( $handle, $filename, O_RDONLY ) || croak "failed to open $filename: $!"; 
+    sysopen( $handle, $filename, O_RDONLY ) || croak "failed to open $filename: $!";
     binmode $handle ;
 
    my $file_length = (stat($filename))[7];
@@ -70,7 +76,7 @@ sub _is_ical_file {
    # "END:VCALENDAR" + \n or CRLF == 15 chars/bytes
    my $end_vcal_len = 15;
 
-   # A valid ics file would be much bigger  
+   # A valid ics file would be much bigger
    croak "not valid ICS file" unless ($file_length > $end_vcal_len);
 
     # seek to the end of the file and get its size
@@ -89,7 +95,7 @@ sub _is_ical_file {
    $iqa->parse_date_and_summary($msg);
 
 Takes a string, such as short SMS text, and parses out a date
-and event summary from it. 
+and event summary from it.
 
 Right now it's sort of dumb. It expects the event description
 to come first, followed by a period, and then a summary. Example:
@@ -97,16 +103,16 @@ to come first, followed by a period, and then a summary. Example:
  tomorrow at noon. Lunch with Bob
 
 The dot was chosen as the delimiter because my cell phone allows
-me to type it directly, using the "1" key. 
+me to type it directly, using the "1" key.
 
 Limitations: A future version should also return an "$is_date" flag, to note if
-the date found was a date or a date and time. 
+the date found was a date or a date and time.
 
-=cut 
+=cut
 
 sub parse_date_and_summary {
     my $self = shift;
-    my $in = shift; 
+    my $in = shift;
 
     require DateTime::Format::Natural;
     my ($date,$msg) = split '\.',  $in;
@@ -121,7 +127,7 @@ sub parse_date_and_summary {
     my $dt;
     eval { $dt = DateTime::Format::Natural->new->parse_datetime(string => $date) };
     croak "error parsing date ($date). error was: $@" if $@;
-    
+
     return ($dt, $msg);
 }
 
@@ -133,10 +139,10 @@ Injects a valid ical event block into the env entry into the end of $filename,
 which is assumed to be a valid iCalendar file. If that assumption is wrong, the
 file could be corrupted. Use the is_ical_file() to check first!
 
-Bugs: Currently always injects a Unix newline. This could corrupt an 
-ICS file with with CRLF line entries. 
+Bugs: Currently always injects a Unix newline. This could corrupt an
+ICS file with with CRLF line entries.
 
-=cut 
+=cut
 
 sub inject_into_ics {
     my $self     = shift;
@@ -147,33 +153,33 @@ sub inject_into_ics {
 
     my $entry =  $self->as_vevent->as_string;
 
-    open( my $fh, "+<$filename") || croak "couldn't open $filename: $!"; 
+    open( my $fh, "+<$filename") || croak "couldn't open $filename: $!";
 
     # END:VCALENDAR has 13 chars
     my $perfect_length = 13 + length $line_ending;
 
-    # seek to exactly the right spot to inject our file. 
+    # seek to exactly the right spot to inject our file.
     my $seek_pos = seek( $fh, -$perfect_length, SEEK_END ) or croak "failed to seek: $!";
 
     print $fh $entry || croak "couldn't print to fh: $!";
 
     print $fh "END:VCALENDAR".$line_ending;
 
-    close ($fh) || croak "couldn't close fh: $!"; 
+    close ($fh) || croak "couldn't close fh: $!";
 
     return 1;
 
 }
 
 =head2 parsed_string()
- 
+
  my $desc = $iqa->parsed_string;
 
 Return a short description. Useful for confirming to the user how the Quick Add string was
-parsed.  
+parsed.
 
 Limitations: the description returned currently always includes hours/minute compontent
-and is in 24 hour time. 
+and is in 24 hour time.
 
 =cut
 
@@ -186,10 +192,10 @@ sub parsed_string {
 }
 
 =head2 as_vevent()
- 
+
  my $vevent = $iqa->as_vevent;
 
-Return a L<Data::ICal::Entry::Event> object representing the event. 
+Return a L<Data::ICal::Entry::Event> object representing the event.
 
 For now, hard-code a one hour duration
 
@@ -216,7 +222,7 @@ sub as_vevent {
 
  my $data_ical = $iqa->as_ical;
 
-Returns a L<Data::ICal> object with the "PUBLISH" method set. 
+Returns a L<Data::ICal> object with the "PUBLISH" method set.
 
 The PUBLISH method is used when mailing iCalendar events.
 
@@ -236,13 +242,13 @@ sub as_ical {
 
 =head2 as_ical_email()
 
- my $email_simple_obj = $iqa->as_ical_email( 
+ my $email_simple_obj = $iqa->as_ical_email(
         To    => $your_regular_email,
         From  => $from_email, # Defaults to $iqa->from_email
   );
 
-Returns a ready-to-mail L<Email::Simple> object with an iCalendar body. 
-Extra headers  can be passed in. 
+Returns a ready-to-mail L<Email::Simple> object with an iCalendar body.
+Extra headers  can be passed in.
 
 =cut
 
@@ -250,7 +256,7 @@ sub as_ical_email {
     my $self = shift;
     my %in = validate(@_, {
         To    => { type => SCALAR },
-        From  => { type => SCALAR, default => $self->from_email }, 
+        From  => { type => SCALAR, default => $self->from_email },
     });
 
      require Email::Simple;
@@ -273,7 +279,7 @@ sub as_ical_email {
 =head2 from_email()
 
 Returns the 'from' email address. It can also be used as a check
-to see if the SMS came from an email at all, since will only be set in that case. 
+to see if the SMS came from an email at all, since will only be set in that case.
 
 =cut
 
@@ -285,7 +291,7 @@ sub from_email {
 =head2 from_email_obj()
 
 If the input was an email, returns the object representing
-the incoming message. Currently a L<Mail::Audit> object. 
+the incoming message. Currently a L<Mail::Audit> object.
 
 =cut
 
@@ -297,7 +303,7 @@ sub from_email_obj {
 
 =head2 get_msg()
 
- Return the event name found in the SMS message. 
+ Return the event name found in the SMS message.
 
 =cut
 
@@ -310,12 +316,27 @@ sub get_msg {
 
 Returns DateTime object found in SMS.
 
-=cut 
+=cut
 
 sub get_dt {
     my $self = shift;
     return $self->{dt};
 }
+
+=head1 CONTRIBUTING
+
+This project is managed using the darcs source control system
+( http://www.darcs.net/ ). My darcs archive is here:
+http://mark.stosberg.com/darcs_hive/ICal-QuickAdd
+
+Contributing a patch can be as easy as:
+
+ darcs get http://mark.stosberg.com/darcs_hive/ICal-QuickAdd
+ cd ICal-QuickAdd
+ # hack...
+ darcs record
+ darcs send
+
 
 =head1 AUTHOR
 

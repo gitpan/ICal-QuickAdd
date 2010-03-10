@@ -1,3 +1,8 @@
+DESCRIPTION
+    This is the guts of ICal::QuickAdd, of interest to developers. Most
+    users probably want the docs of iqa instead, which is a script which
+    uses this module.
+
   new()
       $iqa = ICal::QuickAdd->new('tomorrow at noon. Lunch with Bob') ;
 
@@ -56,7 +61,7 @@
     The PUBLISH method is used when mailing iCalendar events.
 
   as_ical_email()
-     my $email_simple_obj = $iqa->as_ical_email( 
+     my $email_simple_obj = $iqa->as_ical_email(
             To    => $your_regular_email,
             From  => $from_email, # Defaults to $iqa->from_email
       );
@@ -74,10 +79,23 @@
     message. Currently a Mail::Audit object.
 
   get_msg()
-     Return the event name found in the SMS message. 
+     Return the event name found in the SMS message.
 
   get_dt()
     Returns DateTime object found in SMS.
+
+CONTRIBUTING
+    This project is managed using the darcs source control system (
+    http://www.darcs.net/ ). My darcs archive is here:
+    http://mark.stosberg.com/darcs_hive/ICal-QuickAdd
+
+    Contributing a patch can be as easy as:
+
+     darcs get http://mark.stosberg.com/darcs_hive/ICal-QuickAdd
+     cd ICal-QuickAdd
+     # hack...
+     darcs record
+     darcs send
 
 AUTHOR
     Mark Stosberg "mark@summersault.com"

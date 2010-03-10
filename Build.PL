@@ -2,7 +2,7 @@ use Module::Build;
 Module::Build
     ->new(
         dist_author         => 'Mark Stosberg <mark@summersault.com>',
-        dist_abstract       => 'Quickly Add Events to ICal with natural language', 
+        dist_abstract       => 'Quickly Add Events to ICal with natural language',
         dist_version_from   => 'lib/ICal/QuickAdd.pm',
         add-to-cleanup      => [ 'ICal::QuickAdd-*', 't/evo_injectee.ics' ],
         create_makefile_pl  => 'traditional',
